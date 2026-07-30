@@ -1,0 +1,47 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+emo/
+
+# Jupyter / IPython
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# TensorFlow / Keras
+*.keras
+*.h5
+*.hdf5
+*.pb
+*.tflite
+logs/
+checkpoints/
+
+# Data and outputs
+*.csv
+*.parquet
+*.jsonl
+*.npy
+*.npz
+*.pickle
+*.pkl
+*.pt
+*.pth
+*.onnx
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.*
