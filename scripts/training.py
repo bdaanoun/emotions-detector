@@ -1,8 +1,8 @@
 # training the cnn model
 from preprocessing import data_preprocess
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import BatchNormalization, Conv2D, MaxPooling2D, Flatten, Dense, Dropout, RandomFlip, RandomRotation, Input
-from tensorflow.keras.callbacks import TensorBoard, EarlyStopping
+from tensorflow.keras.layers import BatchNormalization, Conv2D, MaxPooling2D, Dense, Dropout, RandomFlip, RandomRotation, RandomZoom, Input, GlobalAveragePooling2D
+from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ReduceLROnPlateau
 from sklearn.model_selection import train_test_split
 
 import pandas as pd
@@ -17,31 +17,39 @@ X_train, X_test, y_train, y_test = train_test_split(pixels, y, test_size=0.2, ra
 
 data_augmentation = Sequential([
     RandomFlip("horizontal"),
-    RandomRotation(0.1),
+    RandomZoom(0.1),
+    RandomRotation(0.1)
 ])
+
+reduce_learning_rate= ReduceLROnPlateau(
+    monitor="val_loss",
+    factor=0.5,
+    patience=3,
+    min_lr=1e-6
+)
 
 early_stop = EarlyStopping(
     monitor="val_loss",
-    patience=5, 
+    patience=5,
     restore_best_weights=True)
 
 model = Sequential([
     Input(shape=(48,48,1)),
     data_augmentation,
-    Conv2D(filters=32, kernel_size=(3,3), activation="relu"),
+    Conv2D(filters=32, kernel_size=(3,3), activation="relu", padding="same"),
     BatchNormalization(),
-    Conv2D(32, (3,3), activation="relu"),
-    BatchNormalization(),
-    MaxPooling2D((2,2)),
-    Conv2D(64, (3,3), activation="relu"),
-    BatchNormalization(),
-    Conv2D(64, (3,3), activation="relu"),
+    Conv2D(32, (3,3), activation="relu", padding="same"),
     BatchNormalization(),
     MaxPooling2D((2,2)),
-    Conv2D(128, (3,3), activation="relu"),
+    Conv2D(64, (3,3), activation="relu", padding="same"),
+    BatchNormalization(),
+    Conv2D(64, (3,3), activation="relu", padding="same"),
     BatchNormalization(),
     MaxPooling2D((2,2)),
-    Flatten(),
+    Conv2D(128, (3,3), activation="relu", padding="same"),
+    BatchNormalization(),
+    MaxPooling2D((2,2)),
+    GlobalAveragePooling2D(),
     Dense(256, activation="relu"),
     Dropout(0.5),
     Dense(7, activation="softmax")
@@ -61,7 +69,7 @@ model.compile(
 )
 
 
-history = model.fit(X_train, y_train, epochs=30, validation_data=(X_test, y_test),callbacks=[tensorboard_callback, early_stop])
+history = model.fit(X_train, y_train, epochs=80, validation_data=(X_test, y_test), callbacks=[tensorboard_callback, early_stop, reduce_learning_rate])
 
 test_loss, test_accuracy = model.evaluate(X_test, y_test)
 print(f"Test Loss: {test_loss:.4f}")

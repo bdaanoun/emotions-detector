@@ -7,7 +7,7 @@ TEST_CSV = "data/test_with_emotions.csv"
 
 df = pd.read_csv(TEST_CSV)
 
-model = load_model("result/model/final_emotion_model.keras")
+model = load_model("results/model/final_emotion_model.keras")
 
 X, y = data_preprocess(df)
 
