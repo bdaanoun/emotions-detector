@@ -3,7 +3,7 @@ from tensorflow.keras.models import load_model
 from preprocessing import data_preprocess
 
 
-TEST_CSV = "data/test_with_emotions.csv"
+TEST_CSV = "data/train.csv"
 
 df = pd.read_csv(TEST_CSV)
 

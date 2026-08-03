@@ -25,35 +25,50 @@ emotions = [
     "Neutral"
 ]
 
+from datetime import timedelta
+
+def get_timestamp(frame_count, fps):
+    total_seconds = frame_count // fps
+    return str(timedelta(seconds=total_seconds))
 
 def predict_live_stream(model, video_path):
     cap = cv.VideoCapture(str(video_path))
+
+    fps = int(cap.get(cv.CAP_PROP_FPS))
+    frame_count = 0
+    image_count = 0
+
+    print("Reading video stream ...")
 
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        face = process_frame(frame)
-        print("Processing frame...")
-        if face is None:
-            continue
+        # Only process one frame every second
+        if frame_count % fps == 0:
+            print(f"Preprocessing ...")
 
-        # process the face for CNN
-        processed_face = face.astype(np.float32) / 255.0
-        processed_face = processed_face.reshape(1, 48, 48, 1)
+            face = process_frame(frame)
+            if face is not None:
+                # save the image
+                filename = f"preprocessing_test/image_{image_count:1d}.png"
+                cv.imwrite(filename, face)
+                
+                # normalize and reshape the face for prediction
+                processed_face = face.astype(np.float32) / 255.0
+                processed_face = processed_face.reshape(1, 48, 48, 1)
 
-        # predict the emotion
-        print("Predicting...")
-        predictions = model.predict(processed_face, verbose=0)
+                predictions = model.predict(processed_face, verbose=0)
 
-        # convert predictions to emotion label
-        index = np.argmax(predictions)
-        emotion = emotions[index]
+                index = np.argmax(predictions)
+                emotion = emotions[index]
+                confidence = predictions[0][index] * 100
 
-        confidence = predictions[0][index] *100
+                print(f"{get_timestamp(frame_count, fps)} : {emotion}, {confidence:.2f}%")
+                image_count += 1
+        frame_count += 1
 
-        print(f"{emotion}, {confidence:.2f}%")
     cap.release()
     cv.destroyAllWindows()
 
